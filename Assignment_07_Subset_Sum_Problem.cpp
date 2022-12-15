@@ -131,106 +131,63 @@ int mainDynamic(){
 // ========================================================BREAK====================================================
 // ========================================================BREAK====================================================
 
+// USE ONLY THIS CODE, THIS CODE WORKS PERFECTLY, THIS PRINTS ALL THE INDICES OF THE ELEMENTS THAT SUM UPTO THE TARGET
+// CAN BE MODIFIED TO PRINT THE ELEMENTS IN THE QUEUE
+int main(){
+	int n = 0;
+	cin >> n;
+	vector<int> nums(n, 0);
+	for(int &x:nums){
+		cin >> x;
+	}
+	int target = 0;
+	cin >> target;
 
-// C++ program to count all subsets with
-// given sum.
-#include <bits/stdc++.h>
-using namespace std;
+	vector<vector<int>> dp(n+1, vector<int>(target+1, 0));
 
-// dp[i][j] is going to store true if sum j is
-// possible with array elements from 0 to i.
-bool** dp;
-
-void display(const vector<int>& v)
-{
-	for (int i = 0; i < v.size(); ++i)
-		printf("%d ", v[i]);
-	printf("\n");
-}
-
-// A recursive function to print all subsets with the
-// help of dp[][]. Vector p[] stores current subset.
-void printSubsetsRec(int arr[], int i, int sum, vector<int>& p)
-{
-	// If we reached end and sum is non-zero. We print
-	// p[] only if arr[0] is equal to sum OR dp[0][sum]
-	// is true.
-	if (i == 0 && sum != 0 && dp[0][sum])
-	{
-		p.push_back(arr[i]);
-		// Display Only when Sum of elements of p is equal to sum
-		if (arr[i] == sum)
-			display(p);
-		return;
+	for(int i = 0; i < n+1; i++){
+		dp[i][0] = 1; // a null set is possible for 0 sum target
 	}
 
-	// If sum becomes 0
-	if (i == 0 && sum == 0)
-	{
-		display(p);
-		return;
+	for(int i = 1; i < n+1; i++){
+		for(int j = 1; j < target+1; j++){
+			if(j >= nums[i-1]){
+				dp[i][j] = dp[i-1][j] || dp[i-1][j-nums[i-1]];
+			}
+			else if(j < nums[i-1]){
+				dp[i][j] = dp[i-1][j];
+			}
+		}
 	}
 
-	// If given sum can be achieved after ignoring
-	// current element.
-	if (dp[i-1][sum])
-	{
-		// Create a new vector to store path
-		vector<int> b = p;
-		printSubsetsRec(arr, i-1, sum, b);
+	// we now have the dp table with true and false values
+	// queue of <n, target, path>
+	queue<pair<pair<int, int>, string>> possible;
+	possible.push(make_pair(make_pair(n, target), ""));
+
+	while(!possible.empty()){
+		pair<pair<int, int>, string> front = possible.front();
+		possible.pop();
+
+		if(front.first.first == 0 || front.first.second == 0){
+			cout << front.second << endl;
+		}
+
+		else{
+			string temp = front.second;
+
+			// If path is possible by Excluding the element
+			if(dp[front.first.first-1][front.first.second]){
+				possible.push(make_pair(make_pair(front.first.first-1, front.first.second), temp));
+			}
+
+			// If path is possible by Including the element
+			if(front.first.second >= nums[front.first.first-1]){
+				if(dp[front.first.first-1][front.first.second-nums[front.first.first-1]]){
+					temp += to_string(front.first.first-1);
+					possible.push(make_pair(make_pair(front.first.first-1, front.first.second-nums[front.first.first-1]), temp));
+				}
+			}
+		}
 	}
-
-	// If given sum can be achieved after considering
-	// current element.
-	if (sum >= arr[i] && dp[i-1][sum-arr[i]])
-	{
-		p.push_back(arr[i]);
-		printSubsetsRec(arr, i-1, sum-arr[i], p);
-	}
-}
-
-// Prints all subsets of arr[0..n-1] with sum 0.
-void printAllSubsets(int arr[], int n, int sum)
-{
-	if (n == 0 || sum < 0)
-	return;
-
-	// Sum 0 can always be achieved with 0 elements
-	dp = new bool*[n];
-	for (int i=0; i<n; ++i)
-	{
-		dp[i] = new bool[sum + 1];
-		dp[i][0] = true;
-	}
-
-	// Sum arr[0] can be achieved with single element
-	if (arr[0] <= sum)
-	dp[0][arr[0]] = true;
-
-	// Fill rest of the entries in dp[][]
-	for (int i = 1; i < n; ++i)
-		for (int j = 0; j < sum + 1; ++j)
-			dp[i][j] = (arr[i] <= j) ? dp[i-1][j] ||
-									dp[i-1][j-arr[i]]
-									: dp[i - 1][j];
-	if (dp[n-1][sum] == false)
-	{
-		printf("There are no subsets with sum %d\n", sum);
-		return;
-	}
-
-	// Now recursively traverse dp[][] to find all
-	// paths from dp[n-1][sum]
-	vector<int> p;
-	printSubsetsRec(arr, n-1, sum, p);
-}
-
-// Driver code
-int main()
-{
-	int arr[] = {1, 2, 3, 4, 5};
-	int n = sizeof(arr)/sizeof(arr[0]);
-	int sum = 10;
-	printAllSubsets(arr, n, sum);
-	return 0;
 }
